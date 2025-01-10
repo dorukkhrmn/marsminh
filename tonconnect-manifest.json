@@ -1,7 +1,5 @@
 {
-    "url": "https://dorukkhrmn.github.io/marsminh",                        
-    "name": "mars miner",                      
-    "iconUrl": "https://dorukkhrmn.github.io/marsminh/dual.png",               
-    "termsOfUseUrl": "<terms-of-use-url>",     
-    "privacyPolicyUrl": "<privacy-policy-url>" 
+    "url": "https://dorukkhrmn.github.io/marsminh/",
+    "name": "Mars Miner",
+    "iconUrl": "https://dorukkhrmn.github.io/marsminh/dual.png"
 }
