@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
+      color: white;
+      height: 100vh;
+    }
+
+    .container {
+      width: 360px;
+      height: 640px;
+      background-color: #111;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 60px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-bottom: 1px solid #333;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .nav-item.active {
+      font-weight: bold;
+      color: #007bff;
+      border-bottom: 2px solid #007bff;
+    }
+
+    .main {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .main.active {
+      display: flex;
+    }
+
+    .item {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.2);
+    }
+
+    .item button {
+      margin-top: 10px;
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Navigasyon Barı -->
+    <div class="navbar">
+      <div class="nav-item active" onclick="switchTab('time')">Time</div>
+      <div class="nav-item" onclick="switchTab('speed')">Speed</div>
+    </div>
+
+    <!-- Time Kategorisi -->
+    <div id="time" class="main active">
+      <h2>Time Upgrades</h2>
+      <div class="item">
+        <p>Increase Daily Limit - 0.5 TON</p>
+        <button onclick="buyItem('Increase Daily Limit', 0.5)">Buy</button>
+      </div>
+      <div class="item">
+        <p>Extend Task Timer - 0.3 TON</p>
+        <button onclick="buyItem('Extend Task Timer', 0.3)">Buy</button>
+      </div>
+    </div>
+
+    <!-- Speed Kategorisi -->
+    <div id="speed" class="main">
+      <h2>Speed Upgrades</h2>
+      <div class="item">
+        <p>Faster Farming - 0.7 TON</p>
+        <button onclick="buyItem('Faster Farming', 0.7)">Buy</button>
+      </div>
+      <div class="item">
+        <p>Task Completion Boost - 0.6 TON</p>
+        <button onclick="buyItem('Task Completion Boost', 0.6)">Buy</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <script>
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+      manifestUrl: 'https://<YOUR_APP_URL>/tonconnect-manifest.json'
+    });
+
+    // Sekme Değiştirme Fonksiyonu
+    function switchTab(tab) {
+      document.querySelectorAll('.main').forEach(section => {
+        section.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      document.getElementById(tab).classList.add('active');
+      document.querySelector(`.nav-item[onclick="switchTab('${tab}')"]`).classList.add('active');
+    }
+
+    // Ürün Satın Alma İşlemi
+    async function buyItem(itemName, price) {
+      try {
+        const transaction = {
+          validUntil: Math.floor(Date.now() / 1000) + 600, // 10 dakika geçerli
+          messages: [
+            {
+              address: '<YOUR_TON_WALLET_ADDRESS>',
+              amount: (price * 1e9).toString(), // TON cinsinden nanoTON'a çevirme
+              payload: btoa(`Purchase: ${itemName}`)
+            }
+          ]
+        };
+
+        const result = await tonConnectUI.sendTransaction(transaction);
+        alert(`Transaction successful for: ${itemName}`);
+        console.log(result);
+      } catch (error) {
+        alert('Transaction failed. Please try again.');
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>

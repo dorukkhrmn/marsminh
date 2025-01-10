@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Telegram Mini App</title>
+  <style>
+    /* Genel ayarlar */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: black;
+      height: 100vh;
+    }
+
+    .container {
+      width: 360px; /* 9:16 formatında genişlik */
+      height: 640px; /* 9:16 formatında yükseklik */
+      background-color: #111111;
+      background-image: linear-gradient(
+        32deg,
+        rgba(8, 8, 8, 0.74) 30px,
+        transparent
+      );
+      background-size: 60px 60px;
+      background-position: -5px -5px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Ana içerik */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .profile-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: white;
+      margin-bottom: 20px;
+      background-image: url('dual.png');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .points {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    .farm-btn {
+      padding: 15px 60px; /* Daha geniş tuş */
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.2);
+      position: relative;
+      margin-top: 20px;
+    }
+
+    .farm-btn[data-timer] {
+      color: transparent;
+    }
+
+    .farm-btn[data-claim]::after {
+      content: 'Claim';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .task-item {
+      background-color: #222;
+      border-radius: 10px;
+      padding: 10px 15px;
+      margin: 10px;
+      color: white;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.2);
+    }
+
+    .task-item button {
+      background-color: black;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Navigasyon çubuğu */
+    .navbar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 60px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-top: 1px solid #333;
+    }
+
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      padding: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .nav-item.active {
+      font-weight: bold;
+      color: #007bff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Ana içerik -->
+    <div id="home" class="main">
+      <div class="profile-img"></div>
+      <div class="points" id="points-display">100 $DUALPOINTS</div>
+      <button id="farm-button" class="farm-btn">Farm</button>
+    </div>
+
+    <div id="tasks" class="main" style="display: none;">
+      <h2 style="color: white;">Tasks</h2>
+      <div id="task-list">
+        <div class="task-item" id="task-1">
+          Join Mars Network Telegram Channel - 1000 $DUALPOINTS
+          <button onclick="startTask('task-1', 'https://t.me/marsnetworkchain')">Start</button>
+        </div>
+        <!-- Yeni görev eklendi -->
+        <div class="task-item" id="task-2">
+          Join $OTTO Token Channel - 1000 $DUALPOINTS
+          <button onclick="startTask('task-2', 'https://t.me/otto_token')">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wheel" class="main" style="display: none;">
+      <h2 style="color: white;">Wheel</h2>
+      <p style="color: white;">Yakında eklenecek...</p>
+    </div>
+
+    <!-- Wallet sekmesi ekleniyor -->
+    <div id="wallet" class="main" style="display: none;">
+      <h2 style="color: white;">Wallet</h2>
+      <div id="ton-connect"></div> <!-- TonConnect Cüzdan Bağlantısı -->
+    </div>
+
+    <!-- Navigasyon Çubuğu -->
+    <div class="navbar">
+      <div class="nav-item active" onclick="switchTab('home')">Home</div>
+      <div class="nav-item" onclick="switchTab('tasks')">Tasks</div>
+      <div class="nav-item" onclick="switchTab('wallet')">Wallet</div> <!-- Wallet Sekmesi Buraya Eklendi -->
+      <div class="nav-item" onclick="switchTab('wheel')">Wheel</div> <!-- Wheel Sekmesi Burada -->
+    </div>
+  </div>
+
+  <script>
+    let points = 100;
+
+    const pointsDisplay = document.getElementById("points-display");
+    const farmButton = document.getElementById("farm-button");
+
+    // Puanları güncelle
+    function updatePointsDisplay() {
+      pointsDisplay.textContent = `${points} $DUALPOINTS`;
+    }
+
+    // Farm tuşu
+    farmButton.addEventListener("click", () => {
+      if (farmButton.hasAttribute("data-claim")) {
+        points += 100;
+        updatePointsDisplay();
+        farmButton.textContent = "Farm";
+        farmButton.removeAttribute("data-claim");
+      } else {
+        startCountdown();
+        farmButton.disabled = true;
+      }
+    });
+
+    // Geri sayım
+    function startCountdown() {
+      let remaining = 8; // Test için 8 saniye
+
+      const interval = setInterval(() => {
+        if (remaining > 0) {
+          remaining--;
+          farmButton.setAttribute("data-timer", `${remaining}s`);
+        } else {
+          clearInterval(interval);
+          farmButton.removeAttribute("data-timer");
+          farmButton.setAttribute("data-claim", "true");
+          farmButton.disabled = false;
+        }
+      }, 1000);
+    }
+
+    // Görev başlat
+    function startTask(taskId, link) {
+      const taskElement = document.getElementById(taskId);
+      const button = taskElement.querySelector("button");
+
+      // Linke yönlendir
+      window.open(link, "_blank");
+
+      // Start -> Claim
+      button.textContent = "Claim";
+      button.onclick = () => claimTask(taskId);
+    }
+
+    // Görevi tamamla
+    function claimTask(taskId) {
+      const taskElement = document.getElementById(taskId);
+
+      // Görevi sil
+      taskElement.remove();
+
+      // Puan ekle
+      points += 1000;
+      updatePointsDisplay();
+    }
+
+    // Sekme değiştirme
+    function switchTab(tab) {
+      document.querySelectorAll(".main").forEach(section => {
+        section.style.display = "none";
+      });
+      document.querySelectorAll(".nav-item").forEach(item => {
+        item.classList.remove("active");
+      });
+      document.getElementById(tab).style.display = "flex";
+      document.querySelector(`.nav-item[onclick="switchTab('${tab}')"]`).classList.add("active");
+    }
+  </script>
+
+  <!-- TON Connect UI script -->
+  <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+  <script>
+    const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+        manifestUrl: 'https://<YOUR_APP_URL>/tonconnect-manifest.json',
+        buttonRootId: 'ton-connect'
+    });
+
+    async function connectToWallet() {
+        const connectedWallet = await tonConnectUI.connectWallet();
+        console.log(connectedWallet);
+    }
+  </script>
+</body>
+</html>
